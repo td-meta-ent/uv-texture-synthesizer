@@ -1,0 +1,11 @@
+# CMake build directory
+/cmake-build-debug
+
+# PNG files
+*.png
+
+# PLY files
+*.ply
+
+# Data files
+/data

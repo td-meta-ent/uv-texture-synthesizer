@@ -1,0 +1,73 @@
+# Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
+# This code is the property of Metaverse Entertainment Inc., a subsidiary of Netmarble Corporation.
+# Unauthorized copying or reproduction of this code, in any form, is strictly prohibited.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace  # Removes trailing whitespaces
+        args: [--markdown-linebreak-ext=md]  # Ignore markdown files
+      - id: check-added-large-files  # Prevents addition of large files
+      - id: check-yaml  # Validates yaml files
+      - id: check-vcs-permalinks  # Checks that links to version control are permanent
+      - id: check-merge-conflict  # Checks for merge conflicts
+      - id: end-of-file-fixer  # Ensures there is a newline at the end of file
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shfmt
+        name: Check shell style with shfmt
+        language: script
+        entry: pre_commit_hooks/shfmt
+        types: [shell]
+        args: [--indent=2, --case-indent]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        name: Run codespell to check for common misspellings in files
+        language: python
+        types: [text]
+        args: ["--write-changes", "--ignore-words-list", "asend"]
+
+  - repo: https://github.com/cpplint/cpplint
+    rev: 1.6.1
+    hooks:
+      - id: cpplint
+        name: cpplint
+        language: python
+        types: [c++]
+        args: ["--filter=-build/include_subdir,-build/c++11,-build/include_order,-build/header_guard"]
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: 'v16.0.6'
+    hooks:
+      -   id: clang-format
+          args: ["-i", "-style=Google"]
+
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  - repo: local
+    hooks:
+      - id: add-copyright
+        name: Add Copyright
+        entry: scripts/add_copyright.sh
+        language: script
+        types: [file]
+        exclude: >-
+          (?x)^(
+            .*\.md$|           # Exclude all markdown files
+            .gitignore$|       # Exclude .gitignore file
+            data/.*|           # Exclude all files in data directory
+            AUTHOR$|           # Exclude AUTHOR file
+            .*/?\.env$|        # Exclude .env files in any directory
+            requirements.txt$| # Exclude requirements.txt file
+            conanfile.txt$|    # Exclude conanfile.txt file
+            CMakeLists.txt$|   # Exclude CMakeLists.txt file
+          )$

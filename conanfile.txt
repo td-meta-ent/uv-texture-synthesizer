@@ -1,0 +1,30 @@
+[requires]
+# Computer Vision and Image Processing
+opencv/4.5.5
+# open3d/0.17.0 - not available on conan-center
+
+# Geometry and 3D Graphics
+cgal/5.6
+vcglib/2022.02
+
+# Mathematical and Numerical Libraries
+eigen/3.4.0
+
+# Optimization and Solver
+ceres-solver/2.1.0
+
+# Logging Library
+glog/0.6.0
+
+# Testing and Benchmarking
+gtest/1.13.0
+benchmark/1.8.2
+
+# Data Handling and Utility
+cnpy/cci.20180601
+boost/1.82.0
+indicators/2.3
+
+[generators]
+CMakeDeps
+CMakeToolchain

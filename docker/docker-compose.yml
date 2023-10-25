@@ -1,0 +1,66 @@
+# Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
+# This code is the property of Metaverse Entertainment Inc., a subsidiary of Netmarble Corporation.
+# Unauthorized copying or reproduction of this code, in any form, is strictly prohibited.
+
+# Define the services that will be deployed by Docker Compose
+services:
+  # Service name
+  surface-refinement:
+    # Set the name of the container to the value of the PROJECT_NAME environment variable
+    container_name: "${PROJECT_NAME}"
+    # Allocate a TTY for the container
+    tty: true
+    # Enable privileged mode for the container
+    privileged: true
+    # Specify shared memory size
+    shm_size: '32gb'
+
+    # Build the container using the following arguments
+    # image: 0x00000024/surface-refinement:v2.0.0
+    build:
+      context: .
+      args:
+        PROJECT_NAME: "${PROJECT_NAME}"
+        ROOT_PASSWORD: "${ROOT_PASSWORD}"
+        PUBLIC_KEY: "${PUBLIC_KEY}"
+        SSH_PORT: "${SSH_PORT}"
+        XRDP_PORT: "${XRDP_PORT}"
+        GIT_USER_NAME: "${GIT_USER_NAME}"
+        GIT_USER_EMAIL: "${GIT_USER_EMAIL}"
+        CONDA_VERSION: "${CONDA_VERSION}"
+        CONDA_PATH: "${CONDA_PATH}"
+        PYTHON_VERSION: "${PYTHON_VERSION}"
+        CLION_VERSION: "${CLION_VERSION}"
+        CONAN_VERSION: "${CONAN_VERSION}"
+        CMAKE_VERSION: "${CMAKE_VERSION}"
+        GCC_VERSION: "${GCC_VERSION}"
+        MAKE_VERSION: "${MAKE_VERSION}"
+        GDB_VERSION: "${GDB_VERSION}"
+        PRE_COMMIT_VERSION: "${PRE_COMMIT_VERSION}"
+        CPP_LINT_VERSION: "${CPP_LINT_VERSION}"
+        SHFMT_VERSION: "${SHFMT_VERSION}"
+        CUDA_TOOLKIT_VERSION: "${CUDA_TOOLKIT_VERSION}"
+        OPENCV_VERSION: "${OPENCV_VERSION}"
+        OPEN3D_VERSION: "${OPEN3D_VERSION}"
+
+    # Deploy configuration for resources and restart behavior
+    deploy:
+      resources:
+        reservations:
+          devices:
+          # Enable GPU support using NVIDIA runtime and map all GPUs to the container
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+    # Always restart the container
+    restart: "always"
+
+    # Map the specified ports to the container's ports
+    ports:
+      - "${SSH_PORT}:22"
+      - "${XRDP_PORT}:3389"
+
+    # Set the XDG_RUNTIME_DIR environment variable
+    environment:
+      XDG_RUNTIME_DIR: "/tmp"
