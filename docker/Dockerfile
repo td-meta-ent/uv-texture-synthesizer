@@ -115,14 +115,29 @@ RUN rm /pkg_install.sh
 
 # Install CLion - A Cross-Platform IDE for C and C++ by JetBrains
 ARG CLION_VERSION
-RUN clion_file="$(mktemp --suffix=.tar.gz)" && \
+ENV CLION_PATH="/opt/clion-${CLION_VERSION}"
+
+RUN mkdir --parents ${CLION_PATH} && \
+    clion_file="$(mktemp --suffix=.tar.gz)" && \
     clion_url="https://download-cdn.jetbrains.com/cpp/CLion-${CLION_VERSION}.tar.gz" && \
     wget --progress=dot:giga --output-document="${clion_file}" "${clion_url}" && \
-    tar --extract --ungzip --file "${clion_file}" --directory=/opt && \
+    tar --extract --ungzip --file "${clion_file}" --directory=${CLION_PATH} --strip-components=1 && \
     rm "${clion_file}"
 
-# Create an alias 'clion' to run CLion and add it to .zshrc
-RUN echo "alias clion=\"/opt/clion-${CLION_VERSION}/bin/clion.sh\"" >>"${HOME}/.zshrc"
+RUN echo "alias clion=\"${CLION_PATH}/bin/clion.sh\"" >>"${HOME}/.zshrc"
+
+# Install IntelliJ IDEA - A Cross-Platform IDE for Java by JetBrains
+ARG IDEA_VERSION
+ENV IDEA_PATH="/opt/idea"
+RUN mkdir --parents ${IDEA_PATH} && \
+    idea_file="$(mktemp --suffix=.tar.gz)" && \
+    idea_url="https://download-cdn.jetbrains.com/idea/ideaIU-${IDEA_VERSION}.tar.gz" && \
+    wget --progress=dot:giga --output-document="${idea_file}" "${idea_url}" && \
+    tar --extract --ungzip --file "${idea_file}" --directory=${IDEA_PATH} --strip-components=1 && \
+    rm "${idea_file}"
+
+# Create an alias 'idea' to run IntelliJ IDEA and add it to .zshrc
+RUN echo "alias idea=\"${IDEA_PATH}/bin/idea.sh\"" >>"${HOME}/.zshrc"
 
 # Add environment variables to shell configuration file
 RUN echo "cd ${PROJECT_PATH}" >>"${HOME}/.zshrc"
@@ -150,6 +165,24 @@ RUN apt-get install --assume-yes neovim
 
 # Install MeshLab - System for processing and editing triangular meshes
 RUN apt-get install --assume-yes meshlab
+
+########################################################################################################################
+# Java
+# Everything about Java.
+########################################################################################################################
+
+# Install OpenJDK - Open Java Development Kit
+ENV JAVA_HOME /usr/local/openjdk-21
+ENV PATH "${JAVA_HOME}/bin:${PATH}"
+ARG JDK_URL="https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/openjdk-21.0.1_linux-x64_bin.tar.gz"
+RUN wget --progress=dot:giga --output-document=openjdk.tar.gz "${JDK_URL}" && \
+    mkdir --parents "${JAVA_HOME}" && \
+    tar --extract --file=openjdk.tar.gz --directory="${JAVA_HOME}" --strip-components=1 && \
+    rm openjdk.tar.gz
+
+# Install Gradle - Powerful build system for the JVM
+ARG GRADLE_VERSION
+RUN bash /pkg_install.sh gradle "${GRADLE_VERSION}"
 
 ########################################################################################################################
 # Mathematics
@@ -211,7 +244,7 @@ RUN apt-get install --assume-yes rsync
 
 # Install Xrdp - Remote Desktop Protocol (RDP) server
 RUN apt-get install --assume-yes xrdp
-RUN sed -i.bak '/fi/a #xrdp multiple users configuration startxfce4 ' /etc/xrdp/startwm.sh
+RUN sed -i.bak '/fi/a #xrdp multiple users configuration startxfce4 ' /etc/xrdp/startwm.sh \
 
 ########################################################################################################################
 # Miscellaneous

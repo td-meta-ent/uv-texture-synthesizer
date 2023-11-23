@@ -43,7 +43,11 @@ services:
         OPENCV_VERSION: "${OPENCV_VERSION}"
         OPEN3D_VERSION: "${OPEN3D_VERSION}"
 
-    # Deploy configuration for resources and restart behavior
+    # Set the environment variables for the container
+    environment:
+      XDG_RUNTIME_DIR: "/tmp"
+
+    # Deploy configuration for resources
     deploy:
       resources:
         reservations:
@@ -61,6 +65,6 @@ services:
       - "${SSH_PORT}:22"
       - "${XRDP_PORT}:3389"
 
-    # Set the XDG_RUNTIME_DIR environment variable
-    environment:
-      XDG_RUNTIME_DIR: "/tmp"
+    # Volume mapping configuration
+    volumes:
+      - "${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH}"
