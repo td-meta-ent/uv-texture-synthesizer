@@ -247,6 +247,14 @@ RUN apt-get install --assume-yes xrdp
 RUN sed -i.bak '/fi/a #xrdp multiple users configuration startxfce4 ' /etc/xrdp/startwm.sh \
 
 ########################################################################################################################
+# Other OS's and file systems
+# Software to run programs compiled for other operating systems, and to use their filesystems.
+########################################################################################################################
+
+# Install cifs-utils - Common Internet File System utilities
+RUN apt-get install --assume-yes cifs-utils
+
+########################################################################################################################
 # Miscellaneous
 # Miscellaneous utilities that didn't fit well anywhere else.
 ########################################################################################################################

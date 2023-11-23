@@ -45,6 +45,11 @@ services:
 
     # Set the environment variables for the container
     environment:
+      NAS_IP_ADDRESS: "${NAS_IP_ADDRESS}"
+      NAS_SHARE_NAME: "${NAS_SHARE_NAME}"
+      NAS_MOUNT_POINT: "${NAS_MOUNT_POINT}"
+      NAS_USERNAME: "${NAS_USERNAME}"
+      NAS_PASSWORD: "${NAS_PASSWORD}"
       XDG_RUNTIME_DIR: "/tmp"
 
     # Deploy configuration for resources
