@@ -23,25 +23,14 @@ namespace surface_refinement {
 class PatchMetrics {
  public:
   /**
-   * @brief Computes normalized cross-correlation (NCC) between two image
-   * patches.
-   *
-   * @param patch1 First image patch.
-   * @param patch2 Second image patch.
-   * @return Normalized cross-correlation between the input image patches.
-   */
-  __device__ static float compute_normalized_cross_correlation(
-      const Eigen::MatrixXf& patch1, const Eigen::MatrixXf& patch2);
-
-  /**
    * @brief Computes the photo-consistency error of a given point.
    *
-   * @param patch_left The left image patch.
-   * @param patch_right The right image patch.
+   * @param patch1 The left image patch.
+   * @param patch2 The right image patch.
    * @return The computed photo-consistency error as (1 - NCC) / 2.
    */
-  __device__ static float compute_photo_consistency_error(
-      const Eigen::MatrixXf& patch_left, const Eigen::MatrixXf& patch_right);
+  __device__ static double compute_photo_consistency_error(
+      const double *patch1, const double *patch2);
 
   /**
    * @brief Computes the delta_p value based on given error values.
@@ -53,9 +42,9 @@ class PatchMetrics {
    * forwards.
    * @return The computed delta_p value.
    */
-  __device__ static float compute_delta_p(float error_minus_delta,
-                                          float error_x,
-                                          float error_plus_delta);
+  __device__ static double compute_photometric_delta(double error_minus_delta,
+                                                     double error_x,
+                                                     double error_plus_delta);
 
   /**
    * @brief Computes the wp value based on given error values.
@@ -67,8 +56,9 @@ class PatchMetrics {
    * forwards.
    * @return The computed wp value.
    */
-  __device__ static float compute_wp(float error_minus_delta, float error_x,
-                                     float error_plus_delta);
+  __device__ static double compute_photometric_weight(double error_minus_delta,
+                                                      double error_x,
+                                                      double error_plus_delta);
 };
 
 }  // namespace surface_refinement

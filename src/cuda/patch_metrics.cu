@@ -7,53 +7,74 @@
 
 namespace surface_refinement {
 
-__device__ float PatchMetrics::compute_normalized_cross_correlation(
-    const Eigen::MatrixXf& patch1, const Eigen::MatrixXf& patch2) {
-  float mean_patch1 = patch1.mean();
-  float mean_patch2 = patch2.mean();
+__device__ double PatchMetrics::compute_photo_consistency_error(
+    const double* patch1, const double* patch2) {
+  const int patch_size = 3 * 3;
 
-  Eigen::MatrixXf patch1_norm = patch1.array() - mean_patch1;
-  Eigen::MatrixXf patch2_norm = patch2.array() - mean_patch2;
+  // Compute means
+  double mean_patch1 = 0.0;
+  double mean_patch2 = 0.0;
+  for (int i = 0; i < patch_size; ++i) {
+    mean_patch1 += patch1[i];
+    mean_patch2 += patch2[i];
+  }
+  mean_patch1 /= patch_size;
+  mean_patch2 /= patch_size;
 
-  float numerator = (patch1_norm.array() * patch2_norm.array()).sum();
-  float denominator = std::sqrt((patch1_norm.array().square().sum()) *
-                                (patch2_norm.array().square().sum()));
+  // Compute normalized patches
+  double patch1_norm[patch_size];
+  double patch2_norm[patch_size];
+  for (int i = 0; i < patch_size; ++i) {
+    patch1_norm[i] = patch1[i] - mean_patch1;
+    patch2_norm[i] = patch2[i] - mean_patch2;
+  }
 
-  return numerator / denominator;
-}
+  // Compute numerator and denominator
+  double numerator = 0.0;
+  double sum_square_patch1 = 0.0;
+  double sum_square_patch2 = 0.0;
+  for (int i = 0; i < patch_size; ++i) {
+    numerator += patch1_norm[i] * patch2_norm[i];
+    sum_square_patch1 += patch1_norm[i] * patch1_norm[i];
+    sum_square_patch2 += patch2_norm[i] * patch2_norm[i];
+  }
 
-__device__ float PatchMetrics::compute_photo_consistency_error(
-    const Eigen::MatrixXf& patch_left, const Eigen::MatrixXf& patch_right) {
-  float ncc = compute_normalized_cross_correlation(patch_left, patch_right);
-  return (1.0f - ncc) / 2.0f;
-}
+  double denominator = sqrt(sum_square_patch1 * sum_square_patch2);
 
-__device__ float PatchMetrics::compute_delta_p(float error_minus_delta,
-                                               float error_x,
-                                               float error_plus_delta) {
-  if (error_minus_delta < fmin(error_x, error_plus_delta)) {
-    return -0.5f;
-  } else if (error_x < fmin(error_minus_delta, error_plus_delta)) {
-    return 0.5f * ((error_minus_delta - error_plus_delta) /
-                   (error_minus_delta + error_plus_delta - 2.0f * error_x));
-  } else if (error_plus_delta < fmin(error_minus_delta, error_x)) {
-    return 0.5f;
+  double ncc;
+  if (denominator == 0.0) {
+    ncc = 0.0;
   } else {
-    return 0.0f;
+    ncc = numerator / denominator;
+  }
+
+  return (1.0 - ncc) / 2.0;
+}
+
+__device__ double PatchMetrics::compute_photometric_delta(
+    double error_minus_delta, double error_x, double error_plus_delta) {
+  if (error_minus_delta < fmin(error_x, error_plus_delta)) {
+    return -0.5;
+  } else if (error_x < fmin(error_minus_delta, error_plus_delta)) {
+    return 0.5 * ((error_minus_delta - error_plus_delta) /
+                  (error_minus_delta + error_plus_delta - 2.0 * error_x));
+  } else if (error_plus_delta < fmin(error_minus_delta, error_x)) {
+    return 0.5;
+  } else {
+    return fmin(error_minus_delta, fmin(error_x, error_plus_delta));
   }
 }
 
-__device__ float PatchMetrics::compute_wp(float error_minus_delta,
-                                          float error_x,
-                                          float error_plus_delta) {
+__device__ double PatchMetrics::compute_photometric_weight(
+    double error_minus_delta, double error_x, double error_plus_delta) {
   if (error_minus_delta < fmin(error_x, error_plus_delta)) {
     return error_x - error_minus_delta;
   } else if (error_x < fmin(error_minus_delta, error_plus_delta)) {
-    return 0.5f * (error_minus_delta + error_plus_delta - 2.0f * error_x);
+    return 0.5 * (error_minus_delta + error_plus_delta - 2.0 * error_x);
   } else if (error_plus_delta < fmin(error_minus_delta, error_x)) {
     return error_x - error_plus_delta;
   } else {
-    return 0.0f;
+    return fmin(error_minus_delta, fmin(error_x, error_plus_delta));
   }
 }
 
