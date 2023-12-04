@@ -22,6 +22,16 @@ void LaunchInitializeTrianglePropertiesKernel(
     TriangleProperties* d_triangle_properties, int* d_num_triangles,
     int grid_size, int block_size);
 
+void LaunchAssignFirstNormalTrianglePropertiesKernel(
+    const int* d_num_triangles, TriangleProperties* d_triangle_properties,
+    TriangleProperties* d_triangle_properties_fixed_normal, int grid_size,
+    int block_size);
+
+void LaunchStoreFirstNormalTrianglePropertiesKernel(
+    const int* d_num_triangles, TriangleProperties* d_triangle_properties,
+    TriangleProperties* d_triangle_properties_fixed_normal, int grid_size,
+    int block_size);
+
 void LaunchComputeTrianglePropertiesKernel(
     const Eigen::Vector3d* d_vertices, const Eigen::Vector3i* d_triangles,
     const int* d_num_triangles, TriangleProperties* d_triangle_properties,
