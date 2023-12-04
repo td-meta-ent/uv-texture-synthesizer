@@ -24,6 +24,16 @@ find_package(vcglib REQUIRED)
 message(STATUS "vcglib_INCLUDE_DIRS: ${vcglib_INCLUDE_DIRS}")
 message(STATUS "vcglib_LIBRARIES: ${vcglib_LIBRARIES}")
 
+find_package(vcglib REQUIRED)
+message(STATUS "vcglib_INCLUDE_DIRS: ${vcglib_INCLUDE_DIRS}")
+message(STATUS "vcglib_LIBRARIES: ${vcglib_LIBRARIES}")
+
+find_package(PCL 1.13.1 REQUIRED COMPONENTS common io filters surface)
+message(STATUS "PCL_INCLUDE_DIRS: ${PCL_INCLUDE_DIRS}")
+message(STATUS "PCL_LIBRARIES: ${PCL_LIBRARIES}")
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 find_package(Ceres REQUIRED)
 message(STATUS "Ceres_INCLUDE_DIRS: ${Ceres_INCLUDE_DIRS}")
 message(STATUS "Ceres_LIBRARIES: ${Ceres_LIBRARIES}")
@@ -56,7 +66,14 @@ find_package(cnpy REQUIRED)
 message(STATUS "cnpy_INCLUDE_DIRS: ${cnpy_INCLUDE_DIRS}")
 message(STATUS "cnpy_LIBRARIES: ${cnpy_LIBRARIES}")
 
+find_package(OpenMP REQUIRED)
+message(STATUS "OpenMP_INCLUDE_DIRS: ${OpenMP_INCLUDE_DIRS}")
+message(STATUS "OpenMP_LIBRARIES: ${OpenMP_LIBRARIES}")
+
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.cu)
+foreach(FILE ${SRC_FILES})
+    message(STATUS "Found file: ${FILE}")
+endforeach()
 
 add_executable(SurfaceRefinement ${SRC_FILES})
 
@@ -64,6 +81,7 @@ target_include_directories(SurfaceRefinement PRIVATE
         ${CUDA_INCLUDE_DIRS}
         ${cgal_INCLUDE_DIRS}
         ${vcglib_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
         ${Ceres_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
         ${Open3D_INCLUDE_DIRS}
@@ -72,6 +90,7 @@ target_include_directories(SurfaceRefinement PRIVATE
         ${indicators_INCLUDE_DIRS}
         ${glog_INCLUDE_DIRS}
         ${cnpy_INCLUDE_DIRS}
+        ${OpenMP_INCLUDE_DIRS}
         include/cpp
         include/cuda
 )
@@ -80,6 +99,7 @@ target_link_libraries(SurfaceRefinement PRIVATE
         ${CUDA_DEV_RUNTIME_LIBRARY}
         ${cgal_LIBRARIES}
         ${vcglib_LIBRARIES}
+        ${PCL_LIBRARIES}
         ${Ceres_LIBRARIES}
         ${OpenCV_LIBRARIES}
         ${Open3D_LIBRARIES}
@@ -88,4 +108,5 @@ target_link_libraries(SurfaceRefinement PRIVATE
         ${indicators_LIBRARIES}
         ${glog_LIBRARIES}
         ${cnpy_LIBRARIES}
+        ${OpenMP_LIBRARIES}
 )
