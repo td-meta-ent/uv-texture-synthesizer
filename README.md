@@ -38,20 +38,21 @@ To compile the Surface Refinement project, utilize the following command:
 
 ### Execution:
 
+The Surface Refinement algorithm supports two modes: `curvature` and `linear_combination`. The `linear_combination` mode is a hybrid approach that integrates both curvature and photometric consistency aspects.
+
 Invoke the Surface Refinement algorithm using the syntax below:
 
 ```bash
 /root/surface-refinement/cmake-build-debug/SurfaceRefinement
-    --inputMesh=data/input/face_part_test.ply
-    --mode=curvature
-    --camera=data/input/camera_params.npy
-    --leftImage=data/input/face_left.png
-    --rightImage=data/input/face_right.png
-    --shiftVector=data/input/shift_vector.npy
-    --surfaceWeight=850
-    --alpha=75000000
-    --beta=5
-    --delta=17000
+    --inputMesh=/mnt/facer-nas01/231023/models/test/cut03/meshes/231023_test_06_cut03_00000.obj
+    --mode=linear_combination
+    --cameraDirPath=/mnt/facer-nas01/231023/boards/06/calibration
+    --imageDirPath=/mnt/facer-nas01/231023/models/test/cut03/rectification
+    --surfaceWeight=1
+    --alpha=0.4
+    --beta=0.01
+    --delta=0.0001
+    --damping=0.999
     --iterations=100
-    --output=data/output/face_smoothed.ply
+    --output=data/output/v5.0.0/face_part_meter_smoothed_lc.ply
 ```
