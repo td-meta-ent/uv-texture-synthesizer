@@ -3,34 +3,16 @@
 // Netmarble Corporation. Unauthorized copying or reproduction of this code, in
 // any form, is strictly prohibited.
 
+#include "main.hpp"
+
 #include <glog/logging.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <chrono>
-#include <iostream>
-
-#include "image.hpp"
-#include "mesh.hpp"
-#include "refiner.hpp"
-#include "shift_vector.hpp"
 
 namespace po = boost::program_options;
-
-struct CommandArguments {
-  std::string input_mesh_path;
-  std::string refinement_mode = "combined";
-  std::string camera_parameters_path;
-  std::string left_image_path;
-  std::string right_image_path;
-  std::string shift_vector_path;
-  double surface_weight = 1.0;
-  double alpha_coefficient = 1.0;
-  double beta_coefficient = 1.0;
-  double delta = 1.0;
-  int number_of_iterations = 1;
-  std::string output_mesh_path;
-};
+namespace fs = boost::filesystem;
+namespace sr = surface_refinement;
 
 namespace surface_refinement {
 
@@ -39,43 +21,29 @@ void RefineMeshSurface(const CommandArguments &arguments) {
 
   LOG(INFO) << "Loading mesh, camera parameters, and images...";
 
-  // Input Mesh
-  boost::filesystem::path input_path(arguments.input_mesh_path);
-  surface_refinement::Mesh mesh(input_path);
+  fs::path camera_dir_path(arguments.camera_dir_path);
+  CameraManager camera_manager(camera_dir_path);
 
-  // Shift Vector
-  boost::filesystem::path npyFilePath(arguments.shift_vector_path);
-  double scaleFactor = 22.5 / 1000 / 100;
-  surface_refinement::ShiftVector shift_vector(
-      npyFilePath, surface_refinement::Image::kDefaultImageWidth, scaleFactor);
+  fs::path input_path(arguments.input_mesh_path);
+  Mesh mesh(input_path, camera_manager);
 
-  // Left Image
-  boost::filesystem::path image_left_path(arguments.left_image_path);
-  surface_refinement::Image image_left(image_left_path);
+  fs::path image_dir_path(arguments.image_dir_path);
+  ImageManager image_manager(image_dir_path, arguments.refinement_mode);
 
-  // Right Image
-  boost::filesystem::path image_right_path(arguments.right_image_path);
-  surface_refinement::Image image_right(image_right_path);
-
-  LOG(INFO) << "Loaded all resources in "
+  LOG(INFO) << "Resources loaded in "
             << std::chrono::duration_cast<std::chrono::seconds>(
                    std::chrono::high_resolution_clock::now() - start_time)
                    .count()
             << " seconds.";
 
   const auto refine_start_time = std::chrono::high_resolution_clock::now();
-  LOG(INFO) << "Refining mesh surface...";
+  LOG(INFO) << "Starting mesh surface refinement...";
 
-  surface_refinement::Refiner refiner(
-      mesh.GetDeviceVertices(), mesh.GetNumVertices(),
-      mesh.GetDeviceNumVertices(), mesh.GetDeviceTriangles(),
-      mesh.GetNumTriangles(), mesh.GetDeviceNumTriangles(),
-      mesh.GetDeviceTriangleProperties(), mesh.GetDeviceOneRingProperties(),
-      mesh.GetDeviceOneRingIndices(), mesh.GetDeviceOneRingIndicesRowLengths(),
-      image_left.GetDeviceImageMatrix(), image_right.GetDeviceImageMatrix(),
-      shift_vector.GetDeviceDistance(), 1, arguments.refinement_mode,
-      arguments.number_of_iterations, arguments.delta,
-      arguments.alpha_coefficient, arguments.beta_coefficient);
+  // Mesh Refinement Process
+  Refiner refiner(mesh, camera_manager, image_manager, arguments.damping,
+                  arguments.refinement_mode, arguments.number_of_iterations,
+                  arguments.delta, arguments.surface_weight,
+                  arguments.alpha_coefficient, arguments.beta_coefficient);
   std::vector<Eigen::Vector3d> curvature_adjusted_vertices =
       refiner.LaunchRefinement();
 
@@ -85,14 +53,14 @@ void RefineMeshSurface(const CommandArguments &arguments) {
   auto milliseconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-  LOG(INFO) << "Mesh surface refined in " << seconds << "s (" << milliseconds
-            << "ms).";
+  LOG(INFO) << "Mesh surface refinement completed in " << seconds << "s ("
+            << milliseconds << "ms).";
 
   const auto save_start_time = std::chrono::high_resolution_clock::now();
-  LOG(INFO) << "Saving mesh...";
-  boost::filesystem::path output_mesh_path(arguments.output_mesh_path);
-  mesh.SaveMesh(curvature_adjusted_vertices, output_mesh_path);
-  LOG(INFO) << "Saved mesh to " << arguments.output_mesh_path << " in "
+  LOG(INFO) << "Saving refined mesh...";
+  fs::path output_mesh_path(arguments.output_mesh_path);
+  mesh.SaveMesh(&curvature_adjusted_vertices, output_mesh_path);
+  LOG(INFO) << "Mesh saved to " << arguments.output_mesh_path << " in "
             << std::chrono::duration_cast<std::chrono::seconds>(
                    std::chrono::high_resolution_clock::now() - save_start_time)
                    .count()
@@ -105,12 +73,35 @@ void RefineMeshSurface(const CommandArguments &arguments) {
             << " seconds.";
 }
 
+void UpdateRelativePaths(CommandArguments *arguments,
+                         const fs::path &project_path) {
+  if (!fs::path(arguments->input_mesh_path).is_absolute()) {
+    arguments->input_mesh_path =
+        (project_path / arguments->input_mesh_path).string();
+  }
+
+  if (!fs::path(arguments->camera_dir_path).is_absolute()) {
+    arguments->camera_dir_path =
+        (project_path / arguments->camera_dir_path).string();
+  }
+
+  if (!fs::path(arguments->image_dir_path).is_absolute()) {
+    arguments->image_dir_path =
+        (project_path / arguments->image_dir_path).string();
+  }
+
+  if (!fs::path(arguments->output_mesh_path).is_absolute()) {
+    arguments->output_mesh_path =
+        (project_path / arguments->output_mesh_path).string();
+  }
+}
+
 }  // namespace surface_refinement
 
 int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
 
-  CommandArguments arguments;
+  sr::CommandArguments arguments;
   po::options_description description("Options");
   description.add_options()("help,h", "Display help message")(
       "inputMesh,i",
@@ -118,14 +109,12 @@ int main(int argc, char *argv[]) {
       "Absolute path to input mesh")(
       "mode,m", po::value<std::string>(&arguments.refinement_mode)->required(),
       "Refinement mode: ['curvature', 'photometric', 'combined']")(
-      "camera,c", po::value<std::string>(&arguments.camera_parameters_path),
-      "Absolute path to camera parameters file")(
-      "leftImage,l", po::value<std::string>(&arguments.left_image_path),
-      "Absolute path to left image")(
-      "rightImage,r", po::value<std::string>(&arguments.right_image_path),
-      "Absolute path to right image")(
-      "shiftVector,s", po::value<std::string>(&arguments.shift_vector_path),
-      "Shift vector for the right camera")(
+      "cameraDirPath,cd",
+      po::value<std::string>(&arguments.camera_dir_path)->required(),
+      "Absolute path to the camera parameters directory")(
+      "imageDirPath,id",
+      po::value<std::string>(&arguments.image_dir_path)->required(),
+      "Absolute path to the image directory")(
       "surfaceWeight,w",
       po::value<double>(&arguments.surface_weight)->default_value(1.0),
       "Weight for surface refinement in combined mode")(
@@ -137,6 +126,8 @@ int main(int argc, char *argv[]) {
       "Beta coefficient for photometric refinement")(
       "delta,d", po::value<double>(&arguments.delta)->default_value(1.0),
       "Delta resolution for refinement")(
+      "damping,dm", po::value<double>(&arguments.damping)->default_value(0.99),
+      "Damping factor for the photometric consistency")(
       "iterations,t",
       po::value<int>(&arguments.number_of_iterations)->default_value(1),
       "Number of refinement iterations")(
@@ -153,26 +144,16 @@ int main(int argc, char *argv[]) {
     }
     po::notify(variable_map);
 
-    boost::filesystem::path project_path =
-        boost::filesystem::absolute(argv[0]).parent_path().parent_path();
+    fs::path project_path = fs::absolute(argv[0]).parent_path().parent_path();
     LOG(INFO) << "Project path: " << project_path.string();
-    arguments.input_mesh_path =
-        (project_path / arguments.input_mesh_path).string();
-    arguments.left_image_path =
-        (project_path / arguments.left_image_path).string();
-    arguments.right_image_path =
-        (project_path / arguments.right_image_path).string();
-    arguments.shift_vector_path =
-        (project_path / arguments.shift_vector_path).string();
-    arguments.output_mesh_path =
-        (project_path / arguments.output_mesh_path).string();
+    sr::UpdateRelativePaths(&arguments, project_path);
   } catch (const po::error &e) {
     LOG(ERROR) << "Error: " << e.what();
     LOG(ERROR) << description;
     return 1;
   }
 
-  surface_refinement::RefineMeshSurface(arguments);
+  sr::RefineMeshSurface(arguments);
 
   return 0;
 }

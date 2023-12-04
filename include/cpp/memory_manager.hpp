@@ -9,8 +9,6 @@
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 
-#include <Eigen/Dense>
-#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -47,28 +45,6 @@ template <typename T>
 class MemoryManager {
  public:
   /**
-   * @brief Allocates memory on the device for a matrix's raw data and copies
-   * data from the host.
-   *
-   * @param rows Number of rows in the matrix.
-   * @param cols Number of columns in the matrix.
-   * @param host_data Data from the host to be copied to the device.
-   *
-   * @return Pointer to the allocated matrix's raw data on the device.
-   */
-  static T *AllocateMatrixDevice(
-      Eigen::Index rows, Eigen::Index cols,
-      const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> &host_data) {
-    T *device_matrix_data;
-    CUDA_ERROR_CHECK(cudaMalloc(&device_matrix_data, sizeof(T) * rows * cols));
-    CUDA_ERROR_CHECK(cudaMemcpy(device_matrix_data, host_data.data(),
-                                sizeof(T) * rows * cols,
-                                cudaMemcpyHostToDevice));
-
-    return device_matrix_data;
-  }
-
-  /**
    * @brief Allocates memory on the device for a std::string and copies data
    * from host to device.
    *
@@ -79,9 +55,9 @@ class MemoryManager {
   static T *AllocateStringDevice(const std::basic_string<T> &host_string) {
     T *device_string_data;
     size_t string_size = sizeof(T) * host_string.size();
-    CUDA_ERROR_CHECK(cudaMalloc(&device_string_data, string_size));
+    CUDA_ERROR_CHECK(cudaMalloc(&device_string_data, string_size))
     CUDA_ERROR_CHECK(cudaMemcpy(device_string_data, host_string.c_str(),
-                                string_size, cudaMemcpyHostToDevice));
+                                string_size, cudaMemcpyHostToDevice))
 
     return device_string_data;
   }
@@ -98,8 +74,8 @@ class MemoryManager {
   static T *AllocateArrayDevice(const size_t num_elements) {
     T *device_array_data;
     size_t array_size = sizeof(T) * num_elements;
-    CUDA_ERROR_CHECK(cudaMalloc(&device_array_data, array_size));
-    CUDA_ERROR_CHECK(cudaMemset(device_array_data, 0, array_size));
+    CUDA_ERROR_CHECK(cudaMalloc(&device_array_data, array_size))
+    CUDA_ERROR_CHECK(cudaMemset(device_array_data, 0, array_size))
 
     return device_array_data;
   }
@@ -115,9 +91,9 @@ class MemoryManager {
   static T *AllocateArrayDevice(const std::vector<T> &host_data) {
     T *device_array_data;
     size_t array_size = sizeof(T) * host_data.size();
-    CUDA_ERROR_CHECK(cudaMalloc(&device_array_data, array_size));
+    CUDA_ERROR_CHECK(cudaMalloc(&device_array_data, array_size))
     CUDA_ERROR_CHECK(cudaMemcpy(device_array_data, host_data.data(), array_size,
-                                cudaMemcpyHostToDevice));
+                                cudaMemcpyHostToDevice))
 
     return device_array_data;
   }
@@ -132,9 +108,9 @@ class MemoryManager {
    */
   static T *AllocateScalarDevice(const T &host_data) {
     T *device_scalar_data;
-    CUDA_ERROR_CHECK(cudaMalloc(&device_scalar_data, sizeof(T)));
+    CUDA_ERROR_CHECK(cudaMalloc(&device_scalar_data, sizeof(T)))
     CUDA_ERROR_CHECK(cudaMemcpy(device_scalar_data, &host_data, sizeof(T),
-                                cudaMemcpyHostToDevice));
+                                cudaMemcpyHostToDevice))
 
     return device_scalar_data;
   }

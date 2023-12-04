@@ -14,7 +14,10 @@
 #include <boost/filesystem.hpp>
 #include <vector>
 
+#include "camera_manager.hpp"
 #include "memory_manager.hpp"
+#include "one_ring_kernel_wrappers.hpp"
+#include "photo_kernel_wrappers.hpp"
 #include "refiner_kernel_wrappers.hpp"
 #include "triangle_kernel_wrappers.hpp"
 
@@ -29,24 +32,30 @@ namespace surface_refinement {
  */
 class Mesh {
  public:
-  explicit Mesh(boost::filesystem::path mesh_file_path);
+  explicit Mesh(boost::filesystem::path mesh_file_path,
+                const CameraManager& camera_manager);
   ~Mesh();
 
   void LoadMesh();
-  void SaveMesh(const std::vector<Eigen::Vector3d>& vertices,
+  void SaveMesh(std::vector<Eigen::Vector3d>* vertices,
                 const boost::filesystem::path& output_file_path) const;
 
-  int GetNumVertices() const;
-  int GetNumTriangles() const;
-
+  std::vector<Eigen::Vector3d> GetVertices() const;
   Eigen::Vector3d* GetDeviceVertices() const;
-  Eigen::Vector3i* GetDeviceTriangles() const;
-  TriangleProperties* GetDeviceTriangleProperties() const;
-  OneRingProperties* GetDeviceOneRingProperties() const;
+  int GetNumVertices() const;
   int* GetDeviceNumVertices() const;
+  Eigen::Vector3i* GetDeviceTriangles() const;
+  int GetNumTriangles() const;
   int* GetDeviceNumTriangles() const;
+  TriangleProperties* GetDeviceTriangleProperties() const;
+  TriangleProperties* GetDeviceTrianglePropertiesFixedNormal() const;
+  OneRingProperties* GetDeviceOneRingProperties() const;
+  PhotometricProperties* GetDevicePhotometricProperties() const;
   int* GetDeviceOneRingIndices() const;
   int* GetDeviceOneRingIndicesRowLengths() const;
+  DeltaVertex* GetDeviceDeltaVertices() const;
+  Eigen::Vector2d* GetDeviceProjectedPixelIndices() const;
+  double* GetDevicePatches() const;
 
  private:
   void AllocateDeviceVariables();
@@ -64,11 +73,20 @@ class Mesh {
   int* d_num_vertices_{nullptr};
   int* d_num_triangles_{nullptr};
   TriangleProperties* d_triangle_properties_{nullptr};
+  TriangleProperties* d_triangle_properties_fixed_normal_{nullptr};
   OneRingProperties* d_one_ring_properties_{nullptr};
+  PhotometricProperties* d_photometric_properties_{nullptr};
   int* d_one_ring_indices_{nullptr};
   int* d_one_ring_indices_row_lengths_{nullptr};
+  DeltaVertex* d_delta_vertices_{nullptr};
+  Eigen::Vector2d* d_projected_pixel_indices_{nullptr};
+  double* d_patches_{nullptr};
   std::vector<std::vector<int>> ComputeOneRingIndices() const;
   void ComputeDeviceOneRingIndices();
+
+  CameraManager camera_manager_;
+
+  void FreeDeviceMemory() const;
 };
 
 }  // namespace surface_refinement

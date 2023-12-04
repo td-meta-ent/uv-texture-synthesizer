@@ -9,51 +9,52 @@ namespace surface_refinement {
 
 Image::Image(boost::filesystem::path image_path)
     : image_file_path_(std::move(image_path)) {
-  image_matrix_ = LoadImageToEigenMatrix();
-  LoadImageToDevice();
+  LoadImageToCvMat();
 }
 
-Image::~Image() { CUDA_ERROR_CHECK(cudaFree(d_image_matrix_)); }
+Image::~Image() = default;
 
-const Eigen::MatrixXd& Image::GetImageMatrix() const { return image_matrix_; }
+const cv::Mat& Image::GetImage() const { return image_; }
 
-const double* Image::GetDeviceImageMatrix() const { return d_image_matrix_; }
+std::vector<double> Image::GetImageGreenChannel() const {
+  return image_green_channel_;
+}
 
-Eigen::MatrixXd Image::LoadImageToEigenMatrix() {
-  LOG(INFO) << "Attempting to load image from: " << image_file_path_.string();
+void Image::LoadImageToCvMat() {
+  LOG(INFO) << "Loading image from: " << image_file_path_.string();
 
   if (!boost::filesystem::exists(image_file_path_)) {
     LOG(ERROR) << "Image file not located at: " << image_file_path_.string();
     throw std::runtime_error("Image file not found");
   }
 
-  cv::Mat opencv_image =
-      cv::imread(image_file_path_.string(), cv::IMREAD_COLOR);
+  image_ = cv::imread(image_file_path_.string(), cv::IMREAD_COLOR);
 
-  if (opencv_image.empty() || opencv_image.rows != kDefaultImageHeight ||
-      opencv_image.cols != kDefaultImageWidth || opencv_image.channels() != 3) {
+  if (image_.empty() || image_.rows != imageHeight ||
+      image_.cols != imageWidth || image_.channels() != 3) {
     LOG(ERROR) << "Image at " << image_file_path_.string()
                << " has incorrect dimensions or failed to load.";
     throw std::runtime_error(
         "Image dimensions are incorrect or loading failed");
   }
 
-  Eigen::MatrixXd eigen_image_matrix(kDefaultImageHeight, kDefaultImageWidth);
+  cv::resize(image_, image_,
+             cv::Size(image_.size().width / 2, image_.size().height / 2));
+  cv::transpose(image_, image_);
+  cv::flip(image_, image_, 0);
 
-  for (int row = 0; row < kDefaultImageHeight; ++row) {
-    for (int col = 0; col < kDefaultImageWidth; ++col) {
-      // Extract the green channel (BGR format in OpenCV)
-      eigen_image_matrix(row, col) =
-          static_cast<double>(opencv_image.at<cv::Vec3b>(row, col)[1]);
-    }
+  if (image_.rows != rotatedImageHeight || image_.cols != rotatedImageWidth) {
+    LOG(ERROR) << "Image at " << image_file_path_.string()
+               << " has incorrect dimensions after resizing.";
+    throw std::runtime_error("Image dimensions are incorrect after resizing");
   }
 
-  return eigen_image_matrix;
-}
+  std::vector<cv::Mat> channels(3);
+  cv::split(image_, channels);
 
-void Image::LoadImageToDevice() {
-  d_image_matrix_ = MemoryManager<double>::AllocateMatrixDevice(
-      kDefaultImageHeight, kDefaultImageWidth, image_matrix_);
+  cv::Mat image_green_channel;
+  channels[1].convertTo(image_green_channel, CV_64F);
+  image_green_channel_ = image_green_channel.reshape(1, 1);
 }
 
 }  // namespace surface_refinement

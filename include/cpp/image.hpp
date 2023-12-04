@@ -12,86 +12,40 @@
 #include <boost/filesystem.hpp>
 #include <opencv2/opencv.hpp>
 #include <utility>
+#include <vector>
 
 #include "memory_manager.hpp"
 
 namespace surface_refinement {
 
-/**
- * @file image.hpp
- * @class Image
- * @brief Represents an image and provides associated utilities.
- * @details The Image class encapsulates image functionalities, bridging between
- * image formats and matrix representations suitable for numerical computations,
- * leveraging the Eigen library. It also handles CUDA device memory allocation
- * for the image matrix.
- */
 class Image {
  public:
-  /**
-   * @brief Default height of the image.
-   */
-  static constexpr int kDefaultImageHeight = 3072;
+  static constexpr int imageHeight = 4096;
 
-  /**
-   * @brief Default width of the image.
-   */
-  static constexpr int kDefaultImageWidth = 4096;
+  static constexpr int rotatedImageHeight = 2798;
+  //  static constexpr int rotatedImageHeight = 5596;
 
-  /**
-   * @brief Constructor to load an image from a given path.
-   * @param image_path The path to the image file.
-   */
+  static constexpr int imageWidth = 5596;
+
+  static constexpr int rotatedImageWidth = 2048;
+  //  static constexpr int rotatedImageWidth = 4096;
+
   explicit Image(boost::filesystem::path image_path);
 
-  /**
-   * @brief Destructor that frees the CUDA device memory.
-   */
   ~Image();
 
-  /**
-   * @brief Returns the image matrix.
-   * @return Eigen::MatrixXd The image matrix.
-   */
-  [[nodiscard]] const Eigen::MatrixXd& GetImageMatrix() const;
+  [[nodiscard]] const cv::Mat& GetImage() const;
 
-  /**
-   * @brief Returns a pointer to the CUDA device memory holding the image
-   * matrix.
-   * @return const double* Pointer to the device image matrix.
-   */
-  [[nodiscard]] const double* GetDeviceImageMatrix() const;
+  [[nodiscard]] std::vector<double> GetImageGreenChannel() const;
 
  private:
-  /**
-   * @brief Loads image from a path and converts to an Eigen Matrix.
-   * @details Uses OpenCV for image loading and extracts the green channel to
-   * populate the matrix.
-   * @return Eigen::MatrixXd Loaded image matrix.
-   */
-  Eigen::MatrixXd LoadImageToEigenMatrix();
+  void LoadImageToCvMat();
 
-  /**
-   * @brief Allocates CUDA device memory and copies the image matrix to the
-   * device.
-   */
-  void LoadImageToDevice();
-
-  /**
-   * @brief The path to the image file.
-   */
   boost::filesystem::path image_file_path_;
 
-  /**
-   * @brief Matrix representation of the image in host memory.
-   */
-  Eigen::MatrixXd image_matrix_;
+  cv::Mat image_;
 
-  /**
-   * @brief Pointer to the matrix representation of the image in CUDA device
-   * memory.
-   */
-  double* d_image_matrix_{nullptr};
+  std::vector<double> image_green_channel_;
 };
 
 }  // namespace surface_refinement
