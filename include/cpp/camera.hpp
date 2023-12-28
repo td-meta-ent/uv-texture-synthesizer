@@ -1,10 +1,5 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
-#ifndef SURFACE_REFINEMENT_CAMERA_HPP_
-#define SURFACE_REFINEMENT_CAMERA_HPP_
+#ifndef UV_TEXTURE_SYNTHESIZER_CAMERA_HPP_
+#define UV_TEXTURE_SYNTHESIZER_CAMERA_HPP_
 
 #include <cnpy.h>
 #include <glog/logging.h>
@@ -17,9 +12,10 @@
 #include <string>
 #include <utility>
 
+#include "image.hpp"
 #include "memory_manager.hpp"
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 struct CameraParams {
   double focal_length_x;
@@ -45,15 +41,16 @@ class Camera {
   boost::filesystem::path camera_params_path_;
 
   CameraParams camera_params_;
-
   CameraParams* d_camera_params_;
+
+  void LoadCameraParameters();
 
   static bool ReadMatrix(const cv::FileStorage& fs, const std::string& key,
                          cv::Mat* matrix, int rows, int cols);
 
-  void LoadCameraParameters();
+  static void ApplyCoordinateTransformation(Eigen::Matrix4d* spatialMatrixPtr);
 };
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer
 
-#endif  // SURFACE_REFINEMENT_CAMERA_HPP_
+#endif  // UV_TEXTURE_SYNTHESIZER_CAMERA_HPP_

@@ -33,17 +33,6 @@ ensure_docker_compose_installed() {
   fi
 }
 
-# Ensure the VOLUME_PATH is existent
-ensure_volume_path_exists() {
-  if [[ ! -d "${VOLUME_PATH}" ]]; then
-    echo "[INFO] VOLUME_PATH does not exist. Creating it..."
-    mkdir -p "${VOLUME_PATH}"
-    echo "[INFO] VOLUME_PATH was created successfully at ${VOLUME_PATH}."
-  else
-    echo "[INFO] VOLUME_PATH is already existent."
-  fi
-}
-
 # Archive the project contents into a tarball
 archive_project_content() {
   echo "[INFO] Starting the archiving process for the project content..."
@@ -84,7 +73,6 @@ main() {
   echo "[INFO] Beginning main execution..."
 
   ensure_docker_compose_installed
-  ensure_volume_path_exists
   archive_project_content
   deploy_with_docker_compose
   clear_generated_files

@@ -1,11 +1,6 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
 #include "image.hpp"
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 Image::Image(boost::filesystem::path image_path)
     : image_file_path_(std::move(image_path)) {
@@ -16,8 +11,8 @@ Image::~Image() = default;
 
 const cv::Mat& Image::GetImage() const { return image_; }
 
-std::vector<double> Image::GetImageGreenChannel() const {
-  return image_green_channel_;
+std::vector<Eigen::Vector3i> Image::GetImageRGBChannel() const {
+  return image_rgb_channel_;
 }
 
 void Image::LoadImageToCvMat() {
@@ -38,23 +33,18 @@ void Image::LoadImageToCvMat() {
         "Image dimensions are incorrect or loading failed");
   }
 
-  cv::resize(image_, image_,
-             cv::Size(image_.size().width / 2, image_.size().height / 2));
-  cv::transpose(image_, image_);
-  cv::flip(image_, image_, 0);
+  // Reserve space for image_rgb_channel_
+  image_rgb_channel_.reserve(image_.rows * image_.cols);
 
-  if (image_.rows != rotatedImageHeight || image_.cols != rotatedImageWidth) {
-    LOG(ERROR) << "Image at " << image_file_path_.string()
-               << " has incorrect dimensions after resizing.";
-    throw std::runtime_error("Image dimensions are incorrect after resizing");
+  // Iterate over each pixel and save RGB data
+  for (int y = 0; y < image_.rows; ++y) {
+    for (int x = 0; x < image_.cols; ++x) {
+      cv::Vec3b color = image_.at<cv::Vec3b>(y, x);
+      // BGR to RGB
+      Eigen::Vector3i pixel(color[2], color[1], color[0]);
+      image_rgb_channel_.push_back(pixel);
+    }
   }
-
-  std::vector<cv::Mat> channels(3);
-  cv::split(image_, channels);
-
-  cv::Mat image_green_channel;
-  channels[1].convertTo(image_green_channel, CV_64F);
-  image_green_channel_ = image_green_channel.reshape(1, 1);
 }
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer

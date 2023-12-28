@@ -16,9 +16,9 @@ message(STATUS "CUDA_INCLUDE_DIRS: ${CUDA_INCLUDE_DIRS}")
 find_library(CUDA_DEV_RUNTIME_LIBRARY cudadevrt ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 message(STATUS "CUDA_DEV_RUNTIME_LIBRARY: ${CUDA_DEV_RUNTIME_LIBRARY}")
 
-find_package(cgal REQUIRED)
-message(STATUS "cgal_INCLUDE_DIRS: ${cgal_INCLUDE_DIRS}")
-message(STATUS "cgal_LIBRARIES: ${cgal_LIBRARIES}")
+#find_package(cgal REQUIRED)
+#message(STATUS "cgal_INCLUDE_DIRS: ${cgal_INCLUDE_DIRS}")
+#message(STATUS "cgal_LIBRARIES: ${cgal_LIBRARIES}")
 
 find_package(vcglib REQUIRED)
 message(STATUS "vcglib_INCLUDE_DIRS: ${vcglib_INCLUDE_DIRS}")
@@ -28,11 +28,11 @@ find_package(vcglib REQUIRED)
 message(STATUS "vcglib_INCLUDE_DIRS: ${vcglib_INCLUDE_DIRS}")
 message(STATUS "vcglib_LIBRARIES: ${vcglib_LIBRARIES}")
 
-find_package(PCL 1.13.1 REQUIRED COMPONENTS common io filters surface)
-message(STATUS "PCL_INCLUDE_DIRS: ${PCL_INCLUDE_DIRS}")
-message(STATUS "PCL_LIBRARIES: ${PCL_LIBRARIES}")
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+#find_package(PCL 1.13.1 REQUIRED COMPONENTS common io filters surface)
+#message(STATUS "PCL_INCLUDE_DIRS: ${PCL_INCLUDE_DIRS}")
+#message(STATUS "PCL_LIBRARIES: ${PCL_LIBRARIES}")
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 
 find_package(Ceres REQUIRED)
 message(STATUS "Ceres_INCLUDE_DIRS: ${Ceres_INCLUDE_DIRS}")
@@ -66,6 +66,18 @@ find_package(cnpy REQUIRED)
 message(STATUS "cnpy_INCLUDE_DIRS: ${cnpy_INCLUDE_DIRS}")
 message(STATUS "cnpy_LIBRARIES: ${cnpy_LIBRARIES}")
 
+find_package(NumCpp REQUIRED)
+message(STATUS "NumCpp_INCLUDE_DIRS: ${numcpp_INCLUDE_DIRS}")
+message(STATUS "NumCpp_LIBRARIES: ${numcpp_LIBRARIES}")
+
+find_package(xtensor REQUIRED)
+message(STATUS "xtensor_INCLUDE_DIRS: ${numcpp_INCLUDE_DIRS}")
+message(STATUS "xtensor_LIBRARIES: ${numcpp_LIBRARIES}")
+
+find_package(HighFive REQUIRED)
+message(STATUS "HighFive_INCLUDE_DIRS: ${numcpp_INCLUDE_DIRS}")
+message(STATUS "HighFive_LIBRARIES: ${numcpp_LIBRARIES}")
+
 find_package(OpenMP REQUIRED)
 message(STATUS "OpenMP_INCLUDE_DIRS: ${OpenMP_INCLUDE_DIRS}")
 message(STATUS "OpenMP_LIBRARIES: ${OpenMP_LIBRARIES}")
@@ -79,9 +91,9 @@ add_executable(SurfaceRefinement ${SRC_FILES})
 
 target_include_directories(SurfaceRefinement PRIVATE
         ${CUDA_INCLUDE_DIRS}
-        ${cgal_INCLUDE_DIRS}
+#        ${cgal_INCLUDE_DIRS}
         ${vcglib_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
+#        ${PCL_INCLUDE_DIRS}
         ${Ceres_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
         ${Open3D_INCLUDE_DIRS}
@@ -90,6 +102,9 @@ target_include_directories(SurfaceRefinement PRIVATE
         ${indicators_INCLUDE_DIRS}
         ${glog_INCLUDE_DIRS}
         ${cnpy_INCLUDE_DIRS}
+        ${NumCpp_INCLUDE_DIRS}
+        ${xtensor_INCLUDE_DIRS}
+        ${HighFive_INCLUDE_DIRS}
         ${OpenMP_INCLUDE_DIRS}
         include/cpp
         include/cuda
@@ -97,9 +112,9 @@ target_include_directories(SurfaceRefinement PRIVATE
 
 target_link_libraries(SurfaceRefinement PRIVATE
         ${CUDA_DEV_RUNTIME_LIBRARY}
-        ${cgal_LIBRARIES}
+#        ${cgal_LIBRARIES}
         ${vcglib_LIBRARIES}
-        ${PCL_LIBRARIES}
+#        ${PCL_LIBRARIES}
         ${Ceres_LIBRARIES}
         ${OpenCV_LIBRARIES}
         ${Open3D_LIBRARIES}
@@ -108,5 +123,8 @@ target_link_libraries(SurfaceRefinement PRIVATE
         ${indicators_LIBRARIES}
         ${glog_LIBRARIES}
         ${cnpy_LIBRARIES}
+        ${NumCpp_LIBRARIES}
+        ${xtensor_LIBRARIES}
+        ${HighFive_LIBRARIES}
         ${OpenMP_LIBRARIES}
 )

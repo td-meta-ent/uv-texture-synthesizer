@@ -13,35 +13,36 @@ services:
     # Enable privileged mode for the container
     privileged: true
     # Specify shared memory size
-    shm_size: '32gb'
+    # shm_size: '32gb'
+    shm_size: '16gb'
 
     # Build the container using the following arguments
-    # image: 0x00000024/surface-refinement:v2.0.0
-    build:
-      context: .
-      args:
-        PROJECT_NAME: "${PROJECT_NAME}"
-        ROOT_PASSWORD: "${ROOT_PASSWORD}"
-        PUBLIC_KEY: "${PUBLIC_KEY}"
-        SSH_PORT: "${SSH_PORT}"
-        XRDP_PORT: "${XRDP_PORT}"
-        GIT_USER_NAME: "${GIT_USER_NAME}"
-        GIT_USER_EMAIL: "${GIT_USER_EMAIL}"
-        CONDA_VERSION: "${CONDA_VERSION}"
-        CONDA_PATH: "${CONDA_PATH}"
-        PYTHON_VERSION: "${PYTHON_VERSION}"
-        CLION_VERSION: "${CLION_VERSION}"
-        CONAN_VERSION: "${CONAN_VERSION}"
-        CMAKE_VERSION: "${CMAKE_VERSION}"
-        GCC_VERSION: "${GCC_VERSION}"
-        MAKE_VERSION: "${MAKE_VERSION}"
-        GDB_VERSION: "${GDB_VERSION}"
-        PRE_COMMIT_VERSION: "${PRE_COMMIT_VERSION}"
-        CPP_LINT_VERSION: "${CPP_LINT_VERSION}"
-        SHFMT_VERSION: "${SHFMT_VERSION}"
-        CUDA_TOOLKIT_VERSION: "${CUDA_TOOLKIT_VERSION}"
-        OPENCV_VERSION: "${OPENCV_VERSION}"
-        OPEN3D_VERSION: "${OPEN3D_VERSION}"
+    image: 0x00000024/surface-refinement:v2.0.0
+#    build:
+#      context: .
+#      args:
+#        PROJECT_NAME: "${PROJECT_NAME}"
+#        ROOT_PASSWORD: "${ROOT_PASSWORD}"
+#        PUBLIC_KEY: "${PUBLIC_KEY}"
+#        SSH_PORT: "${SSH_PORT}"
+#        XRDP_PORT: "${XRDP_PORT}"
+#        GIT_USER_NAME: "${GIT_USER_NAME}"
+#        GIT_USER_EMAIL: "${GIT_USER_EMAIL}"
+#        CONDA_VERSION: "${CONDA_VERSION}"
+#        CONDA_PATH: "${CONDA_PATH}"
+#        PYTHON_VERSION: "${PYTHON_VERSION}"
+#        CLION_VERSION: "${CLION_VERSION}"
+#        CONAN_VERSION: "${CONAN_VERSION}"
+#        CMAKE_VERSION: "${CMAKE_VERSION}"
+#        GCC_VERSION: "${GCC_VERSION}"
+#        MAKE_VERSION: "${MAKE_VERSION}"
+#        GDB_VERSION: "${GDB_VERSION}"
+#        PRE_COMMIT_VERSION: "${PRE_COMMIT_VERSION}"
+#        CPP_LINT_VERSION: "${CPP_LINT_VERSION}"
+#        SHFMT_VERSION: "${SHFMT_VERSION}"
+#        CUDA_TOOLKIT_VERSION: "${CUDA_TOOLKIT_VERSION}"
+#        OPENCV_VERSION: "${OPENCV_VERSION}"
+#        OPEN3D_VERSION: "${OPEN3D_VERSION}"
 
     # Set the environment variables for the container
     environment:
@@ -69,7 +70,3 @@ services:
     ports:
       - "${SSH_PORT}:22"
       - "${XRDP_PORT}:3389"
-
-    # Volume mapping configuration
-    volumes:
-      - "${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH}"

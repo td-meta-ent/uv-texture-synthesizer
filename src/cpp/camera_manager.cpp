@@ -1,25 +1,22 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
 #include "camera_manager.hpp"
 
 #include <open3d/Open3D.h>
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
-CameraManager::CameraManager(boost::filesystem::path camera_parameters_dir)
+CameraManager::CameraManager(boost::filesystem::path camera_parameters_dir,
+                             const std::string& date,
+                             const std::string& cut_number)
     : camera_params_dir_(std::move(camera_parameters_dir)) {
-  LoadCameraParams();
-
+  LoadCameraParams(date, cut_number);
   d_camera_params_ =
       MemoryManager<CameraParams>::AllocateArrayDevice(camera_params_);
 }
 
 CameraManager::~CameraManager() = default;
 
-void CameraManager::LoadCameraParams() {
+void CameraManager::LoadCameraParams(const std::string& date,
+                                     const std::string& cut_number) {
   std::vector<boost::filesystem::path> files;
 
   if (!boost::filesystem::exists(camera_params_dir_) ||
@@ -29,33 +26,39 @@ void CameraManager::LoadCameraParams() {
     return;
   }
 
-  // Iterate over the files in the directory and add them to the files vector.
   for (const auto& entry :
        boost::filesystem::directory_iterator(camera_params_dir_)) {
-    if (boost::filesystem::is_regular_file(entry)) {
+    if (!boost::filesystem::is_regular_file(entry)) continue;
+
+    std::string expected_prefix = "rectification_";
+    expected_prefix += date;
+    expected_prefix += "_test_";
+    expected_prefix += cut_number;
+    expected_prefix += "_";
+
+    std::string filename = entry.path().filename().string();
+
+    if (filename.find(expected_prefix) == 0 &&
+        filename.substr(filename.find_last_of('.') + 1) == "yml") {
       files.push_back(entry.path());
-      ++num_cameras_;
     }
   }
 
-  // Sort the file paths alphabetically.
+  std::vector<Eigen::Vector3d> camera_normals;
+
+  // Sort the files by file name
   std::sort(files.begin(), files.end());
 
-  Eigen::Matrix4d t_0_0 =
-      Camera(files[0]).GetCameraParams().transformation_matrix;
-
-  // Assuming you have a std::vector<Eigen::Vector3d> camera_normals populated
-  std::vector<Eigen::Vector3d> camera_normals;
+  Camera cam_8 = Camera(files[8]);
+  Eigen::Matrix4d t_0_8 = cam_8.GetCameraParams().rectification_matrix *
+                          cam_8.GetCameraParams().transformation_matrix;
 
   for (const auto& file : files) {
     Camera camera(file);
     CameraParams camera_params = camera.GetCameraParams();
 
-    Eigen::Matrix4d camera_normal_tmp =
-        t_0_0 * camera_params.transformation_matrix.inverse();
-
     camera_params.transformation_matrix =
-        t_0_0 * camera_params.transformation_matrix.inverse() *
+        t_0_8 * camera_params.transformation_matrix.inverse() *
         camera_params.rectification_matrix.inverse();
 
     // Camera's viewing direction in camera space
@@ -63,8 +66,13 @@ void CameraManager::LoadCameraParams() {
 
     // Set camera_normal to point in the opposite direction and normalize
     camera_params.camera_normal =
-        -(camera_normal_tmp.block<3, 3>(0, 0) * camera_view_direction)
+        -(camera_params.transformation_matrix.block<3, 3>(0, 0) *
+          camera_view_direction)
              .normalized();
+//    camera_params.camera_normal = camera_params.transformation_matrix.block<3, 3>(0, 0) * camera_params.camera_normal;
+//    camera_params.camera_normal = camera_params.transformation_matrix.block<3, 3>(0, 0) * camera_params.camera_normal;
+//    camera_params.camera_normal = camera_params.transformation_matrix.block<3, 3>(0, 0).transpose() * camera_params.camera_normal;
+
     camera_params.transformation_matrix =
         camera_params.transformation_matrix.inverse().eval();
 
@@ -82,4 +90,4 @@ CameraParams* CameraManager::GetDeviceCameraParams() const {
   return d_camera_params_;
 }
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer

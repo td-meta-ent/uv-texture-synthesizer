@@ -3,8 +3,8 @@
 // Netmarble Corporation. Unauthorized copying or reproduction of this code, in
 // any form, is strictly prohibited.
 
-#ifndef SURFACE_REFINEMENT_MEMORY_MANAGER_HPP_
-#define SURFACE_REFINEMENT_MEMORY_MANAGER_HPP_
+#ifndef UV_TEXTURE_SYNTHESIZER_MEMORY_MANAGER_HPP_
+#define UV_TEXTURE_SYNTHESIZER_MEMORY_MANAGER_HPP_
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
@@ -31,7 +31,7 @@
     }                                                                      \
   }
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 /**
  * @file memory_manager.hpp
@@ -116,6 +116,6 @@ class MemoryManager {
   }
 };
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer
 
-#endif  // SURFACE_REFINEMENT_MEMORY_MANAGER_HPP_
+#endif  // UV_TEXTURE_SYNTHESIZER_MEMORY_MANAGER_HPP_

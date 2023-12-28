@@ -1,42 +1,36 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
-#ifndef SURFACE_REFINEMENT_CAMERA_MANAGER_HPP_
-#define SURFACE_REFINEMENT_CAMERA_MANAGER_HPP_
+#ifndef UV_TEXTURE_SYNTHESIZER_CAMERA_MANAGER_HPP_
+#define UV_TEXTURE_SYNTHESIZER_CAMERA_MANAGER_HPP_
 
 #include <cuda_runtime.h>
 
 #include <Eigen/Dense>
 #include <boost/filesystem.hpp>
-#include <utility>
+#include <string>
 #include <vector>
 
 #include "camera.hpp"
 #include "memory_manager.hpp"
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 class CameraManager {
  public:
-  explicit CameraManager(boost::filesystem::path camera_parameters_dir);
+  CameraManager(boost::filesystem::path camera_parameters_dir,
+                const std::string& date, const std::string& cut_number);
   ~CameraManager();
 
   [[nodiscard]] std::vector<CameraParams> GetCameraParams() const;
-
   [[nodiscard]] CameraParams* GetDeviceCameraParams() const;
 
  private:
-  void LoadCameraParams();
+  void LoadCameraParams(const std::string& date, const std::string& cut_number);
 
   boost::filesystem::path camera_params_dir_;
-  int num_cameras_ = 0;
-  std::vector<CameraParams> camera_params_;
 
-  CameraParams* d_camera_params_ = nullptr;
+  std::vector<CameraParams> camera_params_;
+  CameraParams* d_camera_params_ = {nullptr};
 };
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer
 
-#endif  // SURFACE_REFINEMENT_CAMERA_MANAGER_HPP_
+#endif  // UV_TEXTURE_SYNTHESIZER_CAMERA_MANAGER_HPP_

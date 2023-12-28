@@ -1,11 +1,6 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
 #include "camera.hpp"
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 Camera::Camera(boost::filesystem::path camera_parameters_path)
     : camera_params_path_(std::move(camera_parameters_path)) {
@@ -24,6 +19,16 @@ bool Camera::ReadMatrix(const cv::FileStorage& fs, const std::string& key,
     return false;
   }
   return true;
+}
+
+void Camera::ApplyCoordinateTransformation(Eigen::Matrix4d* spatialMatrixPtr) {
+  // Define the rotation matrix for -90 degrees about the Z-axis
+  Eigen::Matrix4d zAxisRotationMatrix;
+  zAxisRotationMatrix << 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
+
+  // Perform the coordinate transformation directly on the matrix
+  *spatialMatrixPtr =
+      zAxisRotationMatrix * (*spatialMatrixPtr) * zAxisRotationMatrix.inverse();
 }
 
 void Camera::LoadCameraParameters() {
@@ -47,15 +52,18 @@ void Camera::LoadCameraParameters() {
       !ReadMatrix(fs, "R", &rectification_matrix, 3, 3))
     return;
 
-  camera_params_.focal_length_x = intrinsics_matrix.at<double>(0, 0);
-  camera_params_.focal_length_y = intrinsics_matrix.at<double>(1, 1);
-  camera_params_.principal_point_x = intrinsics_matrix.at<double>(0, 2);
-  camera_params_.principal_point_y = intrinsics_matrix.at<double>(1, 2);
+  camera_params_.focal_length_x = intrinsics_matrix.at<double>(1, 1);
+  camera_params_.focal_length_y = intrinsics_matrix.at<double>(0, 0);
+  camera_params_.principal_point_x =
+      Image::imageHeight - intrinsics_matrix.at<double>(1, 2);
+  camera_params_.principal_point_y = intrinsics_matrix.at<double>(0, 2);
+
   cv::Mat rectification_matrix_extended =
       cv::Mat::eye(4, 4, rectification_matrix.type());
   rectification_matrix.copyTo(
       rectification_matrix_extended(cv::Rect(0, 0, 3, 3)));
   cv2eigen(rectification_matrix_extended, camera_params_.rectification_matrix);
+  ApplyCoordinateTransformation(&camera_params_.rectification_matrix);
 
   // Search for translation matrix with pattern 'T_0_*'
   cv::FileNode translation_node;
@@ -75,10 +83,11 @@ void Camera::LoadCameraParameters() {
   cv::Mat T_0_x;
   if (!ReadMatrix(fs, translation_node.name(), &T_0_x, 4, 4)) return;
   cv2eigen(T_0_x, camera_params_.transformation_matrix);
+  ApplyCoordinateTransformation(&camera_params_.transformation_matrix);
 }
 
 CameraParams Camera::GetCameraParams() { return camera_params_; }
 
 CameraParams* Camera::GetDeviceCameraParams() { return d_camera_params_; }
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer

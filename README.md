@@ -1,6 +1,11 @@
-# Surface Refinement CUDA
+# UV Texture Synthesizer
 
-Welcome to the Surface Refinement project. This is a sophisticated CUDA-based platform designed for the meticulous refinement of 3D surfaces leveraging both photometric and geometric consistency.
+Welcome to the UV Texture Synthesizer project.
+
+## TODO
+
+- Fix the Barycentric Filter in C++ Version:
+  - Address and resolve the issues with the barycentric filter implementation in the C++ version of the project.
 
 ## System Prerequisites
 
@@ -9,10 +14,10 @@ Welcome to the Surface Refinement project. This is a sophisticated CUDA-based pl
 Ensure you have the appropriate Nvidia drivers installed for optimal performance:
 
 - **For WSL2**:
-    - Download and install the recommended Nvidia driver for Windows Subsystem for Linux.
+  - Download and install the recommended Nvidia driver for Windows Subsystem for Linux.
 
 - **For Ubuntu**:
-    - Use the package manager or Nvidia's official website to procure and install the appropriate driver for Ubuntu.
+  - Use the package manager or Nvidia's official website to procure and install the appropriate driver for Ubuntu.
 
 **Note**: Reference the `.env` file for the specific Nvidia driver version that has undergone rigorous testing with this project.
 
@@ -30,29 +35,24 @@ This initiative harnesses the power of Docker for a seamless and automated insta
 
 ### Compiling the Project:
 
-To compile the Surface Refinement project, utilize the following command:
+To compile the UV Texture Synthesizer project, utilize the following command:
 
 ```bash
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /root/surface-refinement -B /root/surface-refinement/cmake-build-debug
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /root/uv-texture-synthesizer -B /root/uv-texture-synthesizer/cmake-build-debug
 ```
 
 ### Execution:
 
-The Surface Refinement algorithm supports two modes: `curvature` and `linear_combination`. The `linear_combination` mode is a hybrid approach that integrates both curvature and photometric consistency aspects.
-
-Invoke the Surface Refinement algorithm using the syntax below:
+Invoke the UV Texture Synthesizer algorithm using the following syntax:
 
 ```bash
-/root/surface-refinement/cmake-build-debug/SurfaceRefinement
-    --inputMesh=/mnt/facer-nas01/231023/models/test/cut03/meshes/231023_test_06_cut03_00000.obj
-    --mode=linear_combination
-    --cameraDirPath=/mnt/facer-nas01/231023/boards/06/calibration
-    --imageDirPath=/mnt/facer-nas01/231023/models/test/cut03/rectification
-    --surfaceWeight=1
-    --alpha=0.4
-    --beta=0.01
-    --delta=0.0001
-    --damping=0.999
-    --iterations=100
-    --output=data/output/v5.0.0/face_part_meter_smoothed_lc.ply
+/root/uv-texture-synthesizer/cmake-build-debug/UVTextureSynthesizer
+    --root_path="/root/uv-texture-synthesizer/data/input/v6.0.0/231102"
+    --project_name="APC_Temp"
+    --date="231102"
+    --actor_name="test"
+    --cut_number="00"
+    --frame_number="0000"
+    --time_stamp="000000_000010"
+    --num_cameras=10
 ```

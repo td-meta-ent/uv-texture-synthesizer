@@ -1,10 +1,5 @@
-// Copyright (c) 2023 Netmarble Corporation. All Rights Reserved.
-// This code is the property of Metaverse Entertainment Inc., a subsidiary of
-// Netmarble Corporation. Unauthorized copying or reproduction of this code, in
-// any form, is strictly prohibited.
-
-#ifndef SURFACE_REFINEMENT_IMAGE_MANAGER_HPP_
-#define SURFACE_REFINEMENT_IMAGE_MANAGER_HPP_
+#ifndef UV_TEXTURE_SYNTHESIZER_IMAGE_MANAGER_HPP_
+#define UV_TEXTURE_SYNTHESIZER_IMAGE_MANAGER_HPP_
 
 #include <glog/logging.h>
 #include <omp.h>
@@ -12,51 +7,59 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <opencv2/opencv.hpp>
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "image.hpp"
 
-namespace surface_refinement {
+namespace uv_texture_synthesizer {
 
 struct ImageProperties {
-  int rows = Image::rotatedImageHeight;
-  int cols = Image::rotatedImageWidth;
-  int num_images;
+  int rows = Image::imageHeight;
+  int cols = Image::imageWidth;
 };
 
 class ImageManager {
  public:
-  explicit ImageManager(boost::filesystem::path image_dir,
-                        const std::string& mode);
+  ImageManager(boost::filesystem::path image_dir,
+               const std::string& project_name, const std::string& date,
+               const std::string& actor_name, const std::string& cut_number,
+               const std::string& frame_number, const std::string& time_stamp);
   ~ImageManager();
 
   [[nodiscard]] const std::vector<cv::Mat>& GetImages() const;
 
-  [[nodiscard]] double* GetDeviceImages() const;
+  [[nodiscard]] Eigen::Vector3i* GetDeviceImages() const;
 
   [[nodiscard]] ImageProperties GetImageProperties() const;
 
   [[nodiscard]] ImageProperties* GetDeviceImageProperties() const;
 
- private:
-  void LoadImages();
+  [[nodiscard]] int* GetDeviceImageHeight() const;
 
-  [[nodiscard]] static bool IsImageFile(const std::string& extension);
+  [[nodiscard]] int* GetDeviceImageWidth() const;
+
+ private:
+  void LoadImages(const std::string& project_name, const std::string& date,
+                  const std::string& actor_name, const std::string& cut_number,
+                  const std::string& frame_number,
+                  const std::string& time_stamp);
 
   boost::filesystem::path image_dir_;
 
-  int num_images_ = 0;
+  int* d_image_height_ = {nullptr};
+  int* d_image_width_ = {nullptr};
 
   std::vector<cv::Mat> images_;
-  std::vector<double> images_double_;
-  double* d_images_ = nullptr;
+  std::vector<Eigen::Vector3i> images_eigen_;
+  Eigen::Vector3i* d_images_ = {nullptr};
 
   ImageProperties image_properties_{};
-  ImageProperties* d_image_properties_ = nullptr;
+  ImageProperties* d_image_properties_ = {nullptr};
 };
 
-}  // namespace surface_refinement
+}  // namespace uv_texture_synthesizer
 
-#endif  // SURFACE_REFINEMENT_IMAGE_MANAGER_HPP_
+#endif  // UV_TEXTURE_SYNTHESIZER_IMAGE_MANAGER_HPP_
